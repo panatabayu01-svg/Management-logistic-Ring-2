@@ -147,59 +147,95 @@ p {
   const APP_BASE_URL = "https://script.google.com/macros/s/AKfycbwZoMYrIgJYVKfUY7EQa4AY7eLaGtHqT_5r7y11OJC7_7mlst1SGRljTEl_ZJyq226wlA/exec";
   const DEVICE_KEY = "ML_USER_ONLINE_DEVICE_ID_V1";
 
+  // LINK 2 DEVICE ID
+  // Disamakan dengan pola Link 1 yang sudah terbukti berhasil:
+  // localStorage -> cookie -> buat ID baru.
+  // DEVICE_KEY tetap milik Link 2.
   function getLink2DeviceId() {
-      try {
-          let id = String(localStorage.getItem(DEVICE_KEY) || "").trim();
+      const COOKIE_NAME = DEVICE_KEY;
 
-          if (!id) {
-              if (window.crypto && typeof window.crypto.randomUUID === "function") {
-                  id = window.crypto.randomUUID();
-              } else {
-                  id = "DEV-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
-              }
-
-              localStorage.setItem(DEVICE_KEY, id);
+      function readCookie() {
+          try {
+              const match = document.cookie.match(
+                  new RegExp("(?:^|; )" + COOKIE_NAME.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "=([^;]+)")
+              );
+              return match ? decodeURIComponent(match[1]) : "";
+          } catch (e) {
+              return "";
           }
+      }
 
-          return id;
-      } catch (e) {
+      function saveCookie(id) {
+          try {
+              document.cookie = COOKIE_NAME + "=" + encodeURIComponent(id) +
+                  "; path=/; max-age=31536000; SameSite=Lax";
+          } catch (e) {}
+      }
+
+      function newId() {
+          if (window.crypto && typeof window.crypto.randomUUID === "function") {
+              return window.crypto.randomUUID();
+          }
           return "DEV-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
       }
+
+      try {
+          const stored = String(localStorage.getItem(DEVICE_KEY) || "").trim();
+          if (stored) {
+              saveCookie(stored);
+              return stored;
+          }
+      } catch (e) {}
+
+      const cookieId = readCookie();
+      if (cookieId) {
+          try { localStorage.setItem(DEVICE_KEY, cookieId); } catch (e) {}
+          return cookieId;
+      }
+
+      const id = newId();
+      try { localStorage.setItem(DEVICE_KEY, id); } catch (e) {}
+      saveCookie(id);
+      return id;
   }
 
   const LINK2_DEVICE_ID = getLink2DeviceId();
+
+  // ANDROID CHROME FIX — pola yang sama dengan Link 1 yang sudah berhasil.
+  // Tetap mempertahankan mode=baru khusus Link 2.
+  // Hanya QUERY yang dikirim; tidak menggunakan fragment (#).
+  const encodedDeviceId = encodeURIComponent(LINK2_DEVICE_ID);
   const APP_URL =
       APP_BASE_URL +
-      "?mode=baru&mlDeviceId=" + encodeURIComponent(LINK2_DEVICE_ID);
+      "?mode=baru&mlDeviceId=" + encodedDeviceId;
 
-const isIOS =
-    /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isIOS =
+      /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-const isStandalone =
-    isIOS
-        ? window.navigator.standalone === true
-        : window.matchMedia("(display-mode: standalone)").matches;
+  const isStandalone =
+      isIOS
+          ? window.navigator.standalone === true
+          : window.matchMedia("(display-mode: standalone)").matches;
 
-if (isStandalone) {
-    // Android Chrome / PWA: navigasi top-level langsung ke Web App.
-    // Navigasi top-level yang stabil di Chrome Android; mlDeviceId + mode=baru tetap dikirim.
-            window.location.assign(APP_URL);
-} else {
-    const status = document.getElementById("status");
-    const btn = document.getElementById("openApp");
+  if (isStandalone) {
+      window.location.assign(APP_URL);
+  } else {
+      const status = document.getElementById("status");
+      const btn = document.getElementById("openApp");
 
-    if (status) {
-        status.textContent =
-            "Tambahkan aplikasi ini ke Layar Utama untuk menggunakan Management Logistic.";
-    }
+      if (status) {
+          status.textContent =
+              "Tambahkan aplikasi ini ke Layar Utama untuk menggunakan Management Logistic.";
+      }
 
-    if (btn) {
-        btn.style.display = "block";
-        btn.onclick = function() {
-            window.location.assign(APP_URL);
-        };
-    }
-}
+      if (btn) {
+          btn.style.display = "block";
+          btn.onclick = function() {
+              window.location.assign(APP_URL);
+          };
+      }
+  }
+
 </script>
 
 </body>
