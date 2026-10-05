@@ -181,7 +181,9 @@ const isStandalone =
         : window.matchMedia("(display-mode: standalone)").matches;
 
 if (isStandalone) {
-    window.location.replace(APP_URL);
+    // Android Chrome / PWA: navigasi top-level langsung ke Web App.
+    // Navigasi top-level yang stabil di Chrome Android; mlDeviceId + mode=baru tetap dikirim.
+            window.location.assign(APP_URL);
 } else {
     const status = document.getElementById("status");
     const btn = document.getElementById("openApp");
@@ -194,7 +196,7 @@ if (isStandalone) {
     if (btn) {
         btn.style.display = "block";
         btn.onclick = function() {
-            window.location.href = APP_URL;
+            window.location.assign(APP_URL);
         };
     }
 }
