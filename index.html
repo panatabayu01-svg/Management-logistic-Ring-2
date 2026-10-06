@@ -107,18 +107,6 @@ p {
 </head>
 
 <body>
-<script>
-(function(){
-  const params = new URLSearchParams(window.location.search);
-  const shareToken = (params.get("s") || "").trim();
-  if (shareToken) {
-    const SHARE_APP_URL = "https://script.google.com/macros/s/AKfycbwZoMYrIgJYVKfUY7EQa4AY7eLaGtHqT_5r7y11OJC7_7mlst1SGRljTEl_ZJyq226wlA/exec";
-    window.location.replace(SHARE_APP_URL + "?s=" + encodeURIComponent(shareToken));
-  }
-})();
-</script>
-
-
 
 <div id="loading">
 
@@ -152,10 +140,6 @@ p {
   // aplikasi dibuka. Dengan cara ini ID DEVICE tetap sama setelah APPROVED
   // dan popup registrasi tidak muncul lagi.
   const APP_BASE_URL = "https://script.google.com/macros/s/AKfycbwZoMYrIgJYVKfUY7EQa4AY7eLaGtHqT_5r7y11OJC7_7mlst1SGRljTEl_ZJyq226wlA/exec";
-
-  // SHARE GATEWAY: satu pintu untuk Share dari Link 1 dan Link 2.
-  const SHARE_TOKEN = new URLSearchParams(window.location.search).get("s");
-  const SHARE_APP_URL = SHARE_TOKEN ? APP_BASE_URL + "?s=" + encodeURIComponent(String(SHARE_TOKEN).trim()) : "";
   const DEVICE_KEY = "ML_USER_ONLINE_DEVICE_ID_V1";
 
   function getLink2DeviceId() {
@@ -179,10 +163,9 @@ p {
   }
 
   const LINK2_DEVICE_ID = getLink2DeviceId();
-  const APP_URL = SHARE_APP_URL || (
+  const APP_URL =
       APP_BASE_URL +
-      "?mode=baru&mlDeviceId=" + encodeURIComponent(LINK2_DEVICE_ID)
-  );
+      "?mode=baru&mlDeviceId=" + encodeURIComponent(LINK2_DEVICE_ID);
 
 const isIOS =
     /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -192,9 +175,7 @@ const isStandalone =
         ? window.navigator.standalone === true
         : window.matchMedia("(display-mode: standalone)").matches;
 
-if (SHARE_APP_URL) {
-    window.location.replace(SHARE_APP_URL);
-} else if (isStandalone) {
+if (isStandalone) {
     window.location.replace(APP_URL);
 } else {
     const status = document.getElementById("status");
